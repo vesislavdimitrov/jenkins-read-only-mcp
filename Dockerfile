@@ -12,7 +12,8 @@ ENV PATH="/root/.local/bin:$PATH"
 COPY pyproject.toml ./
 RUN uv sync --python 3.12
 
-COPY config.py jenkins_client.py jenkins_utils.py server.py ./
+COPY lib/ ./lib/
+COPY server.py ./
 
 ENV HTTP_HOST=0.0.0.0 PORT=8000
 EXPOSE 8000

@@ -4,8 +4,8 @@ from typing import Any
 
 import httpx
 
-from config import Config
-from jenkins_utils import *
+from .config import Config
+from .jenkins_utils import *
 
 
 class JenkinsHTTP:

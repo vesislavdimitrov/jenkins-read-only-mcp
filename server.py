@@ -9,8 +9,8 @@ import httpx
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 
-from config import Config, ConfigError
-from jenkins_client import JenkinsClient
+from lib.config import Config, ConfigError
+from lib.jenkins_client import JenkinsClient
 
 config = Config.from_env()
 client = JenkinsClient(config)
