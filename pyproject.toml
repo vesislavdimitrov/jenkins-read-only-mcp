@@ -9,4 +9,4 @@ dependencies = [
 ]
 
 [project.scripts]
-jenkins-mcp = "server:mcp.run"
+jenkins-mcp = "server:main"
