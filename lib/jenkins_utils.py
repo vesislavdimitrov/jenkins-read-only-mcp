@@ -4,6 +4,7 @@ import re
 from typing import Any, Callable, Iterable, Iterator
 from urllib.parse import urlparse
 
+from .exceptions import JenkinsValidationError
 
 _COLOR_STATUS = {
     "blue": "success",
@@ -56,10 +57,7 @@ def extract_parameters(actions: Iterable[dict[str, Any]] | None) -> dict[str, An
 
 def extract_causes(actions: Iterable[dict[str, Any]] | None) -> list[str]:
     return [
-        c["shortDescription"]
-        for a in actions or []
-        for c in a.get("causes", []) or []
-        if c.get("shortDescription")
+        c["shortDescription"] for a in actions or [] for c in a.get("causes", []) or [] if c.get("shortDescription")
     ]
 
 
@@ -226,9 +224,9 @@ def build_matcher(pattern: str, *, regex: bool) -> Callable[[str | None], bool]:
 
 def validate_range(name: str, value: int, *, low: int, high: int | None = None) -> None:
     if value < low:
-        raise ValueError(f"{name} must be >= {low}, got {value}")
+        raise JenkinsValidationError(f"{name} must be >= {low}, got {value}")
     if high is not None and value > high:
-        raise ValueError(f"{name} must be <= {high}, got {value}")
+        raise JenkinsValidationError(f"{name} must be <= {high}, got {value}")
 
 
 def kind_of(entry: dict[str, Any]) -> str:
@@ -250,9 +248,7 @@ def make_walk_filter(
     if kind:
         normalized = _KIND_ALIASES.get(kind.lower())
         if not normalized:
-            raise ValueError(
-                f"kind must be one of folder/job/pipeline, got {kind!r}"
-            )
+            raise JenkinsValidationError(f"kind must be one of folder/job/pipeline, got {kind!r}")
         kind = normalized
 
     needle = status.lower() if status else None
@@ -281,22 +277,20 @@ def grep_lines(
             continue
         start = max(0, i - context)
         end = min(len(lines), i + context + 1)
-        matches.append({
-            "line_number": i + 1,
-            "line": line,
-            "context": lines[start:end],
-            "context_start": start + 1,
-        })
+        matches.append(
+            {
+                "line_number": i + 1,
+                "line": line,
+                "context": lines[start:end],
+                "context_start": start + 1,
+            }
+        )
     return matches
 
 
 def _unescape_xml(s: str) -> str:
     return (
-        s.replace("&lt;", "<")
-        .replace("&gt;", ">")
-        .replace("&quot;", '"')
-        .replace("&apos;", "'")
-        .replace("&amp;", "&")
+        s.replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", '"').replace("&apos;", "'").replace("&amp;", "&")
     )
 
 
@@ -396,21 +390,13 @@ def computer_tree() -> str:
 
 
 def root_name(data: dict[str, Any]) -> str:
-    return (
-        data.get("fullDisplayName")
-        or data.get("displayName")
-        or data.get("name")
-        or "(root)"
-    )
+    return data.get("fullDisplayName") or data.get("displayName") or data.get("name") or "(root)"
 
 
 def scan_warning(truncated: bool, max_jobs: int) -> str | None:
     if not truncated:
         return None
-    return (
-        f"underlying walk truncated at {max_jobs} jobs; "
-        "matches are only over the scanned subset"
-    )
+    return f"underlying walk truncated at {max_jobs} jobs; " "matches are only over the scanned subset"
 
 
 def shape_artifact(a: dict[str, Any], build_url: str | None) -> dict[str, Any]:
@@ -438,6 +424,7 @@ def decode_artifact(content: bytes, max_bytes: int) -> dict[str, Any]:
         }
     except UnicodeDecodeError:
         import base64
+
         return {
             "is_text": False,
             "encoding": "base64",
@@ -446,4 +433,3 @@ def decode_artifact(content: bytes, max_bytes: int) -> dict[str, Any]:
             "truncated": truncated,
             "content": base64.b64encode(chunk).decode("ascii"),
         }
-

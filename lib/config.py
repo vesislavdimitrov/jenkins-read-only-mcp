@@ -4,9 +4,6 @@ import os
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
-_TRUE = frozenset({"1", "true", "yes", "on"})
-_FALSE = frozenset({"0", "false", "no", "off", ""})
-_DEFAULT_URL = "http://localhost:8080"
 
 class ConfigError(ValueError):
     pass
@@ -40,6 +37,11 @@ class Config:
             http_port=_parse_int(env, "PORT", default=8000, minimum=1, maximum=65535),
             enable_dns_rebinding_protection=_parse_bool(env, "ENABLE_DNS_REBINDING_PROTECTION", default=False),
         )
+
+
+_TRUE = frozenset({"1", "true", "yes", "on"})
+_FALSE = frozenset({"0", "false", "no", "off", ""})
+_DEFAULT_URL = "http://localhost:8080"
 
 
 def _parse_url(value: str) -> str:

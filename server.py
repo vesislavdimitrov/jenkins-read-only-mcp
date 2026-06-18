@@ -5,11 +5,11 @@ import functools
 import sys
 from typing import Any
 
-import httpx
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 
 from lib.config import Config, ConfigError
+from lib.exceptions import JenkinsError
 from lib.jenkins_client import JenkinsClient
 
 config = Config.from_env()
@@ -27,14 +27,8 @@ def _safe(fn):
     def wrapper(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
-        except httpx.HTTPStatusError as e:
-            return {"error": f"HTTP {e.response.status_code} for {e.request.url}"}
-        except httpx.RequestError as e:
-            return {"error": f"request failed: {e!s}"}
-        except ValueError as e:
+        except JenkinsError as e:
             return {"error": str(e)}
-        except Exception as e:
-            return {"error": f"{type(e).__name__}: {e}"}
     return wrapper
 
 

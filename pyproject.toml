@@ -9,4 +9,8 @@ dependencies = [
 ]
 
 [project.scripts]
-jenkins-mcp = "server:main"
+jenkins-mcp = "server:mcp.run"
+
+[tool.black]
+line-length = 120
+target-version = ["py312"]
